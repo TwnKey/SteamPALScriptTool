@@ -74,6 +74,19 @@ def readtextbig5(
     else:
         return output.decode("big5")
 
+
+def count_text_bytes(addr, barray):
+    count = 0
+    char2 = barray[addr:addr+2]
+    while char2 != bytearray(b'%Q'):
+        count += 1
+        addr = addr + 1
+        char2 = barray[addr:addr+2]
+        
+
+    return count
+
+
 def readtextoffset(stream: BufferedReader, offset: int, encoding: str = "big5") -> str:
     return_offset = stream.tell()
     stream.seek(offset)

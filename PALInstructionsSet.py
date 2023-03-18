@@ -3,8 +3,15 @@ from lib.parser import readint, readintoffset, readtextoffset, readtextascii,rea
 from hanziconv import HanziConv
 from deep_translator import GoogleTranslator
 
+
+#Pas terrible, mais bon
+text_addrs = []
+pointers = []
+
 def OP_0(instr, stream):
+    global text_addrs
     value1 = readint(stream, 2)
+    addr = stream.tell()
     text = readtextbig5(stream, raw = True)
     offset = 0
     if ((instr.op_code + 1) < 3):
@@ -13,8 +20,11 @@ def OP_0(instr, stream):
         offset = 0xC
     elif (((instr.op_code + 1) == 0x59) and ((instr.op_code + 1) == 0x5A)):
         offset = 0x8
+        
+    text_addrs.append(addr + offset -2)
     text = text[offset-2:]
     instr.operands.append(operand(text,"text"))
+    
 
 def OP_9(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
@@ -314,11 +324,16 @@ def OP_CE(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_17(instr, stream):
+    global pointers
     current = readint(stream, 2) 
     while current != 0xFF00:
         instr.operands.append(operand(current))
         current = readint(stream, 2)
-    instr.operands.append(operand(readint(stream, 4), "pointeur"))
+        
+    to = readint(stream, 4)
+    pointers.append(pointer(stream.tell() - 4, to))
+    
+    instr.operands.append(operand(to, "pointeur"))
 
 def OP_69(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
@@ -341,7 +356,10 @@ def OP_83(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_E(instr, stream):
-    instr.operands.append(operand(readint(stream, 4), "pointeur")) #pointeur ici ?
+    global pointers
+    to = readint(stream, 4)
+    pointers.append(pointer(stream.tell() - 4, to))
+    instr.operands.append(operand(to, "pointeur")) #pointeur ici ?
 def OP_4E(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
@@ -387,10 +405,13 @@ def OP_CF(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_28(instr, stream):
-    current = readint(stream, 4) #Quasi sûr que c'est des pointeurs !!
-    while current != 0xFF00FF00:
-        instr.operands.append(operand(current, "pointeur"))
-        current = readint(stream, 4)
+    global pointers
+    to = readint(stream, 4) #Quasi sûr que c'est des pointeurs !!
+    while to != 0xFF00FF00:
+        
+        pointers.append(pointer(stream.tell() - 4, to))
+        instr.operands.append(operand(to, "pointeur"))
+        to = readint(stream, 4)
 def OP_311(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_F(instr, stream):
@@ -402,7 +423,8 @@ def OP_16(instr, stream):
     while current != 0xFF00:
         instr.operands.append(operand(current))
         current = readint(stream, 2)
-    instr.operands.append(operand(readint(stream, 4), "pointeur"))
+    pointers.append(pointer(stream.tell() - 4, to))
+    instr.operands.append(operand(to, "pointeur"))
 def OP_8C(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
@@ -412,19 +434,22 @@ def OP_A4(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_1F(instr, stream):
+    global pointers
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 4), "pointeur"))
+    pointers.append(pointer(stream.tell() - 4, to))
+    instr.operands.append(operand(to, "pointeur"))
 def OP_82(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_8F(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_56(instr, stream):
-    current = readint(stream, 4) #Quasi sûr que c'est des pointeurs !!
+    to = readint(stream, 4) #Quasi sûr que c'est des pointeurs !!
     while current != 0xFF00FF00:
-        instr.operands.append(operand(current, "pointeur"))
-        current = readint(stream, 4)
+        pointers.append(pointer(stream.tell() - 4, to))
+        instr.operands.append(operand(to, "pointeur"))
+        to = readint(stream, 4)
 def OP_B0(instr, stream):
     pass
 def OP_D6(instr, stream):
@@ -627,8 +652,15 @@ class operand:
         self.value = value
         self.type = type
         
-
-
+class pointer:
+    def __init__(self, addr_from, addr_to):
+        self.from_ = addr_from
+        self.to = addr_to
+        
+class event:
+    def __init__(self, addr, instrs):
+        self.instructions = instrs
+        self.addr = addr
 
 
 class instruction(object):
@@ -639,30 +671,21 @@ class instruction(object):
         self.operands = []
         self.name = ""
 
-        print(hex(self.op_code ), " ", hex(stream.tell()-2))
+        #print(hex(self.op_code ), " ", hex(stream.tell()-2))
         instruction_set[self.op_code](self, stream)
     def to_string(self):
         result = ""
+        #result = hex(self.addr) + " " + hex(self.op_code) + " "
         for op in self.operands:
             if op.type == "text":
-                #find name if exists 
-                #if (op.value.count(b"%C") > 0) and (op.value.count(b"%N") > 0)  :
-                #    start_name_idx = op.value.index(b"%C") + 3
-                #    end_name_idx = op.value.index(b"%N")
-                #    name_barray = op.value[start_name_idx:end_name_idx]
-                #    result = "\"" + name_barray.decode("big5") + "\";"
-                #else:
-                #    result = "\"\";"
-                #if (op.value.count(b"%C5") > 1):
-                #    start_text_idx = op.value.index(b"%C5") + 3
-                #    end_text_idx = len(op.value)
-                #    
-                #    result = result + "\"" + text_barray.decode("big5") + "\""
-                #else:
-                print(hex(self.addr))
+                
                 CN = HanziConv.toSimplified(op.value.decode("big5",errors='replace')).replace("%N","\n")
-                FR = GoogleTranslator(source='zh-CN', target='fr').translate(CN)
-                text_ = "\"" + CN + "\"" + ";" + "\"" + FR + "\""
-                print(text_)
-                result = text_ + ";\n"
+                FR = ""#GoogleTranslator(source='zh-CN', target='fr').translate(CN)
+                text_ = "\"" + CN + "\"" + "," + "\"" + FR + "\"" 
+                
+                result = result + text_ + ",\"\",\n"
+            #else:
+            #    result = result + str(op.value) + " "
+        #result = result + ",\n"
         return result 
+      
