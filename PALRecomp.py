@@ -43,27 +43,26 @@ def recompile(csv_file, dat_file):
                 dialog = row[2].replace("\n", "%N")
                 lines = dialog.split("%N")
                 
-
+                
                 TL = ""
                 for i_l in range(0, len(lines)):
                     l = lines[i_l]
+                    
                     if len(l)>32:
                         #if one line is too long, we will automatically put newlines in the remaining lines
-                        start = "".join(lines[0:i_l-1])
+                        
                         remaining = "".join(lines[i_l:len(lines)])
                         while (len(remaining) > 32):
                             l32 = remaining[0:31]
                             last_space_idx = l32.rindex(' ')
-                            start = start + l32[0:last_space_idx] + "%N"
-                            
+                            TL = TL + l32[0:last_space_idx] + "%N"
                             remaining = remaining[last_space_idx+1:len(remaining)]
                             
-                        TL = start + remaining
+                        TL = TL + remaining
                         
                         break
                     else:
                         TL = TL + l + "%N"
-                        
                 translations.append(TL)
         
         
