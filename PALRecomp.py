@@ -51,7 +51,7 @@ def recompile(csv_file, dat_file):
                     if len(l)>32:
                         #if one line is too long, we will automatically put newlines in the remaining lines
                         
-                        remaining = "".join(lines[i_l:len(lines)])
+                        remaining = l
                         while (len(remaining) > 32):
                             l32 = remaining[0:31]
                             last_space_idx = l32.rindex(' ')
@@ -60,9 +60,11 @@ def recompile(csv_file, dat_file):
                             
                         TL = TL + remaining
                         
-                        break
+                        
                     else:
-                        TL = TL + l + "%N"
+                        TL = TL + l
+                    if i_l < len(lines)-1:
+                            TL = TL + "%N"
                 translations.append(TL)
         
         
