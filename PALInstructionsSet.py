@@ -7,6 +7,30 @@ from deep_translator import GoogleTranslator
 #Pas terrible, mais bon
 text_addrs = []
 pointers = []
+pointers_avec_offset = []
+
+
+
+def add_normal_ptr(instr, stream):
+    global pointers
+    to = readint(stream, 4)
+    if (to != 0xFF00FF00):
+        pointers.append(pointer(stream.tell() - 4, to))
+        instr.operands.append(operand(to, "pointeur"))
+        return True
+    else:
+        #stream.seek(stream.tell()-4)
+        return False
+def add_offset_ptr(instr, stream): #regular pointer but with an unexplainable offset of 0x200
+    global pointers_avec_offset
+    to = readint(stream, 4)
+    if (to != 0xFF00FF00):
+        pointers_avec_offset.append(pointer(stream.tell() - 4, to + 0x200))
+        instr.operands.append(operand(to, "pointeur"))
+        return True
+    else:
+        #stream.seek(stream.tell()-4)
+        return False
 
 def OP_0(instr, stream):
     global text_addrs
@@ -114,13 +138,12 @@ def OP_4C(instr, stream):
 def OP_4D(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_15(instr, stream):
+    
     instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 2)))
+    add_offset_ptr(instr, stream)
 def OP_14(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 2)))
+    add_offset_ptr(instr, stream)
 def OP_46(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
@@ -169,11 +192,13 @@ def OP_77(instr, stream):
 def OP_CD(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_C9(instr, stream):
+    global pointers_avec_offset
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 2)))
-    instr.operands.append(operand(readint(stream, 2)))
+    
+    add_offset_ptr(instr, stream)
+    
 def OP_18(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_4B(instr, stream):
@@ -324,16 +349,12 @@ def OP_CE(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_17(instr, stream):
-    global pointers
     current = readint(stream, 2) 
     while current != 0xFF00:
         instr.operands.append(operand(current))
         current = readint(stream, 2)
         
-    to = readint(stream, 4)
-    pointers.append(pointer(stream.tell() - 4, to))
-    
-    instr.operands.append(operand(to, "pointeur"))
+    add_offset_ptr(instr, stream)
 
 def OP_69(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
@@ -356,10 +377,7 @@ def OP_83(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_E(instr, stream):
-    global pointers
-    to = readint(stream, 4)
-    pointers.append(pointer(stream.tell() - 4, to))
-    instr.operands.append(operand(to, "pointeur")) #pointeur ici ?
+    add_offset_ptr(instr, stream)
 def OP_4E(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
@@ -387,10 +405,9 @@ def OP_20(instr, stream):
 def OP_CA(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
-    current = readint(stream, 4)
-    while current != 0xFF00FF00:
-        instr.operands.append(operand(current))
-        current = readint(stream, 4)
+    res = add_offset_ptr(instr, stream)
+    while res:
+        res = add_offset_ptr(instr, stream)
 def OP_B5(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
@@ -405,13 +422,9 @@ def OP_CF(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_28(instr, stream):
-    global pointers
-    to = readint(stream, 4) #Quasi sûr que c'est des pointeurs !!
-    while to != 0xFF00FF00:
-        
-        pointers.append(pointer(stream.tell() - 4, to))
-        instr.operands.append(operand(to, "pointeur"))
-        to = readint(stream, 4)
+    res = add_offset_ptr(instr, stream)
+    while res:
+        res = add_offset_ptr(instr, stream)
 def OP_311(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_F(instr, stream):
@@ -423,8 +436,7 @@ def OP_16(instr, stream):
     while current != 0xFF00:
         instr.operands.append(operand(current))
         current = readint(stream, 2)
-    pointers.append(pointer(stream.tell() - 4, to))
-    instr.operands.append(operand(to, "pointeur"))
+    add_offset_ptr(instr, stream)
 def OP_8C(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
@@ -434,22 +446,18 @@ def OP_A4(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_1F(instr, stream):
-    global pointers
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
-    pointers.append(pointer(stream.tell() - 4, to))
-    instr.operands.append(operand(to, "pointeur"))
+    add_offset_ptr(instr, stream)
 def OP_82(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
     instr.operands.append(operand(readint(stream, 2)))
 def OP_8F(instr, stream):
     instr.operands.append(operand(readint(stream, 2)))
 def OP_56(instr, stream):
-    to = readint(stream, 4) #Quasi sûr que c'est des pointeurs !!
-    while current != 0xFF00FF00:
-        pointers.append(pointer(stream.tell() - 4, to))
-        instr.operands.append(operand(to, "pointeur"))
-        to = readint(stream, 4)
+    res = add_offset_ptr(instr, stream)
+    while res:
+        res = add_offset_ptr(instr, stream)
 def OP_B0(instr, stream):
     pass
 def OP_D6(instr, stream):
@@ -675,7 +683,8 @@ class instruction(object):
         instruction_set[self.op_code](self, stream)
     def to_string(self):
         result = ""
-        #result = hex(self.addr) + " " + hex(self.op_code) + " "
+        #result = str(self.addr) + " " + hex(self.op_code) + " "
+        
         for op in self.operands:
             if op.type == "text":
                 

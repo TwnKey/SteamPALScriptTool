@@ -4,25 +4,27 @@ import struct
 
 codec_name = 'pal_custom_codec'
 
-map = { 'è' : 0xA940, 
-        'é' : 0xA941, 
-        'à' : 0xA942, 
-        'ù' : 0xA943,
-        'ê' : 0xA944,
-        'ô' : 0xA945,
-        'À' : 0xA946,
-        'ç' : 0xA947,
-        'î' : 0xA948,
-        'ï' : 0xA949,
-        'û' : 0xA94A,
-        'œ' : 0xA94B,
-        'É' : 0xA94C,
-        'â' : 0xA94D,
-        'Î' : 0xA94E,
-        'Ê' : 0xA94F,
-        '～' : 0xA950,
-        'Ç': 0xA951,
-        ' ​​': ' '
+map = { 'è' : 0x40A9, 
+        'é' : 0x41A9, 
+        'à' : 0x42A9, 
+        'ù' : 0x43A9,
+        'ê' : 0x44A9,
+        'ô' : 0x45A9,
+        'À' : 0x46A9,
+        'ç' : 0x47A9,
+        'î' : 0x48A9,
+        'ï' : 0x49A9,
+        'û' : 0x4AA9,
+        'œ' : 0x4BA9,
+        'É' : 0x4CA9,
+        'â' : 0x4DA9,
+        'Î' : 0x4EA9,
+        'Ê' : 0x4FA9,
+        '～' : 0x50A9,
+        'Ç': 0x51A9,
+        ' ​​': ' ',
+        '»': 0x52A9,
+        '«': 0x53A9,
         #​0x200b : ' '
         }
 
@@ -31,14 +33,19 @@ class Codec(codecs.Codec):
         output = bytearray()
         
         for char in input:
-            if char in map.keys():
-                if (map[char]>255):
-                    output.extend(struct.pack('<H', map[char]))
+            try:
+                if char in map.keys():
+                    if (map[char]>255):
+                        output.extend(struct.pack('<H', map[char]))
+                    else:
+                        output.extend(struct.pack('<B', map[char]))
                 else:
-                    output.extend(struct.pack('<B', map[char]))
-            else:
-                output.extend(char.encode("big5"))
-
+                    output.extend(char.encode("big5"))
+            except Exception as inst:
+                print(input)
+                print(inst)
+                #bytes([20]), len(output)
+                raise
         return bytes(output), len(output)
         #return codecs.charmap_encode(input, errors, encoding_map)
 

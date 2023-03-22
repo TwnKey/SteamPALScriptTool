@@ -65,6 +65,7 @@ def parse(path):
             
         PALInstructionsSet.pointers.sort(key=operator.attrgetter('to'))
         
+        second_part_pointers = second_part_pointers + PALInstructionsSet.pointers_avec_offset
         second_part_pointers.sort(key=operator.attrgetter('to'))
         
         events.sort(key=operator.attrgetter('addr'))
@@ -72,8 +73,10 @@ def parse(path):
 
 def write(filename, PALDec):
     file_str = ""
+    idx_ev = 0
     for event in PALDec.events:
-        #file_str = file_str + "\"EVENT\";\n"
+        #file_str = file_str + str(idx_ev) + "\"EVENT\";\n"
+        idx_ev += 1
         for instr in event.instructions:
             file_str = file_str + instr.to_string()
     with open(filename +".csv",'w', encoding="utf-8") as f:
