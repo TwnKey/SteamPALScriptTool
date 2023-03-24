@@ -46,8 +46,7 @@ def parse(path):
             dest = readint(stream, 4) + 0x200
             second_part_pointers.append(PALInstructionsSet.pointer(stream.tell()-4, dest))
             list_event_ptrs.append(dest)
-        #the first section has pointers but likely located before any code, so it is fine to keep them as is.
-        #second part likely contains pointers to events (didn't make sure though). those need to be edited.
+       
         events = []
         current_event = PALInstructionsSet.event(stream.tell(), [])
         while (stream.tell() < filesize):
@@ -73,10 +72,7 @@ def parse(path):
 
 def write(filename, PALDec):
     file_str = ""
-    idx_ev = 0
     for event in PALDec.events:
-        #file_str = file_str + str(idx_ev) + "\"EVENT\";\n"
-        idx_ev += 1
         for instr in event.instructions:
             file_str = file_str + instr.to_string()
     with open(filename +".csv",'w', encoding="utf-8") as f:

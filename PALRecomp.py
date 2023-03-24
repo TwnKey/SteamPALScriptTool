@@ -26,6 +26,12 @@ def init_argparse() -> argparse.ArgumentParser:
     parser.add_argument('dat_file')
     return parser
 
+class dialog:
+    def __init__(self, TL, parameters):
+        self.TL = TL
+        self.params = parameters
+        for i in range(0, len(self.params)):
+            self.params[i] = int(self.params[i])
 
 def recompile(csv_file, dat_file):
         filename = Path(csv_file).stem
@@ -42,36 +48,8 @@ def recompile(csv_file, dat_file):
         with open(csv_file, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
             for row in reader:
-                dialog = row[2].replace("\n", "%N")
-               
-                lines = dialog.split("%N")
-                #lines = [str(index_row)]
-                index_row += 1
                 
-                TL = ""
-                for i_l in range(0, len(lines)):
-                    l = lines[i_l]
-                    
-                    if len(l)>32:
-                        #if one line is too long, we will automatically put newlines in the remaining lines
-                        
-                        remaining = l
-                        while (len(remaining) > 32):
-                            l32 = remaining[0:31]
-                            if (l32.count(' ') > 0):
-                                last_space_idx = l32.rindex(' ')
-                            else:
-                                last_space_idx = len(l32)
-                            TL = TL + l32[0:last_space_idx] + "%N"
-                            remaining = remaining[last_space_idx+1:len(remaining)]
-                            
-                        TL = TL + remaining
-                        
-                        
-                    else:
-                        TL = TL + l
-                    if i_l < len(lines)-1:
-                            TL = TL + "%N"
+                TL = dialog(row[1].replace("\n", "%N"), row[2:])
                 translations.append(TL)
         
         
@@ -89,7 +67,6 @@ def recompile(csv_file, dat_file):
                     break
                 idx_current_ptr += 1
                 new_ptr_value = struct.pack('I',ptr.to + globaloffset)
-                #print("Updating value from " + hex(ptr.to) + " to " + hex(ptr.to + globaloffset))
                 out[ptr.from_:ptr.from_+4] = new_ptr_value
                 
             for i in range(idx_current_evptr, len(PalDec.events_pointers)):
@@ -103,7 +80,7 @@ def recompile(csv_file, dat_file):
             
                 
             sz = count_text_bytes(text_addr, out)
-            new_text_bytes = codecs.encode(translations[idx_text], "pal_custom_codec", "backslashreplace")
+            new_text_bytes = codecs.encode(translations[idx_text].TL, "pal_custom_codec", "backslashreplace")
             
             globaloffset = globaloffset + len(new_text_bytes) - sz 
             idx_text = idx_text + 1
@@ -112,18 +89,26 @@ def recompile(csv_file, dat_file):
         idx_text = 0        
         #then we insert the new bytes
         for text_addr in PalDec.text_addrs:
-             
             text_addr = text_addr + globaloffset
             sz = count_text_bytes(text_addr, out) 
-            new_text_bytes = codecs.encode(translations[idx_text], "pal_custom_codec", "backslashreplace")
+            new_text_bytes = codecs.encode(translations[idx_text].TL, "pal_custom_codec", "backslashreplace")
+            
             out[text_addr:text_addr+sz] = []
             #print("Removing " + hex(sz) + " bytes at addr " + hex(text_addr))
             #print("Adding " + hex(len(new_text_bytes)) + " bytes at addr " + hex(text_addr) + "global offset " + hex(globaloffset))
+            for idx_param in range(0, len(translations[idx_text].params)):
+                param_value = translations[idx_text].params[idx_param]
+                param_bytes = struct.pack('H',param_value)
+                offset = 2 * (len(translations[idx_text].params) - idx_param)
+                
+                out[text_addr - offset:text_addr - offset + 2] = param_bytes
+                
             out[text_addr:text_addr] = new_text_bytes
+            
             
             globaloffset = globaloffset + len(new_text_bytes) - sz 
             idx_text = idx_text + 1
-        with open("test.dat", "wb") as binary_file:
+        with open("out.dat", "wb") as binary_file:
             # Write bytes to file
             binary_file.write(out)
         

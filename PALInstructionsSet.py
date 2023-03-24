@@ -34,19 +34,29 @@ def add_offset_ptr(instr, stream): #regular pointer but with an unexplainable of
 
 def OP_0(instr, stream):
     global text_addrs
-    value1 = readint(stream, 2)
+    
     addr = stream.tell()
-    text = readtextbig5(stream, raw = True)
+    
     offset = 0
     if ((instr.op_code + 1) < 3):
         offset = 4
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
     elif ((instr.op_code + 1) < 7):
-        offset = 0xC
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
     elif (((instr.op_code + 1) == 0x59) and ((instr.op_code + 1) == 0x5A)):
-        offset = 0x8
-        
-    text_addrs.append(addr + offset -2)
-    text = text[offset-2:]
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+        instr.operands.append(operand(readint(stream, 2)))
+    
+    text_addrs.append(stream.tell())
+    text = readtextbig5(stream, raw = True)
     instr.operands.append(operand(text,"text"))
     
 
@@ -691,8 +701,23 @@ class instruction(object):
                 CN = HanziConv.toSimplified(op.value.decode("big5",errors='replace')).replace("%N","\n")
                 FR = ""#GoogleTranslator(source='zh-CN', target='fr').translate(CN)
                 text_ = "\"" + CN + "\"" + "," + "\"" + FR + "\"" 
-                
-                result = result + text_ + ",\"\",\n"
+                parameters = ""
+                if len(self.operands)-1 == 6:
+                    parameters += str(self.operands[0].value) + ", "
+                    parameters += str(self.operands[1].value) + ", "
+                    parameters += str(self.operands[2].value) + ", "
+                    parameters += str(self.operands[3].value) + ", "
+                    parameters += str(self.operands[4].value) + ", "
+                    parameters += str(self.operands[5].value)
+                elif len(self.operands)-1 == 4:
+                    parameters += str(self.operands[0].value) + ", "
+                    parameters += str(self.operands[1].value) + ", "
+                    parameters += str(self.operands[2].value) + ", "
+                    parameters += str(self.operands[3].value)
+                elif len(self.operands)-1 == 2:
+                    parameters += str(self.operands[0].value) + ", "
+                    parameters += str(self.operands[1].value)
+                result = result + text_ + "," + parameters + "\n"
             #else:
             #    result = result + str(op.value) + " "
         #result = result + ",\n"
