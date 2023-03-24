@@ -20,15 +20,15 @@ Once the dialogs have been translated, you can run the following command:
   
 and finally put the generated .dat file into the game directory (replace the name of the output .dat file accordingly)
 
-#Demo
+# Demo
 https://www.youtube.com/watch?v=3_FYB_OnEYk
 
-#Custom letters
+# Custom letters
 If you want to add language specific letters such as à é è, you will have to replace existing letters in the Resources/CS.ttf font file with your letters, then recompile your csv into a .dat applying a custom encoding that will do the mapping.
 This is done as follows:
 - First find letters in your .ttf font that you don't plan to use and which exists in the big5 encoding (see http://ash.jp/code/cn/big5tbl.htm); basically just pick random chinese characters in those tables, and write their corresponding encoding (example: 世 is A540)
 - Use a tool like FontForge to copy the drawing of your letter é, à, etc, in the slot of your target big5 characters chosen in the previous step. Characters are ordered in unicode order in fontforge and you can jump to a specific unicode. unicode for 世 is 4E16 as indicated here https://www.compart.com/en/unicode/U+4E16
 - Generate your ttf file and place the ttf in the Resources directory, replacing the base game one.
-- Finally in the script CustomCodec.py, add the mapping between your desired character (for example, é) and the encoding it will take (A540) like in the picture below:
+- Finally in the script CustomCodec.py, add the mapping between your desired character (for example, é) and the encoding it will take (A540) like in the picture below:  
 ![image](https://user-images.githubusercontent.com/69110695/227640333-88c87e17-8c71-489f-ae29-a9f9b9eaba35.png) 
 - Recompile your scripts
