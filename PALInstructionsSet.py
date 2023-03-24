@@ -49,7 +49,7 @@ def OP_0(instr, stream):
         instr.operands.append(operand(readint(stream, 2)))
         instr.operands.append(operand(readint(stream, 2)))
         instr.operands.append(operand(readint(stream, 2)))
-    elif (((instr.op_code + 1) == 0x59) and ((instr.op_code + 1) == 0x5A)):
+    elif (((instr.op_code + 1) == 0x59) or ((instr.op_code + 1) == 0x5A)):
         instr.operands.append(operand(readint(stream, 2)))
         instr.operands.append(operand(readint(stream, 2)))
         instr.operands.append(operand(readint(stream, 2)))
