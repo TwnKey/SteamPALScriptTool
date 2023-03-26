@@ -38,7 +38,8 @@ def parse(path):
         nb_first_part = readint(stream, 4)
         if (nb_first_part != 0xFFFFFFFF):
             for i in range(0,nb_first_part-1):
-                first_part_pointers.append(readint(stream, 4))
+                dest = readint(stream, 4) + 0x200
+                first_part_pointers.append(PALInstructionsSet.pointer(stream.tell()-4, dest))
         first_ptr = readint(stream, 4) + 0x200
         second_part_pointers.append(PALInstructionsSet.pointer(stream.tell() - 4, first_ptr))
         list_event_ptrs = []
@@ -64,7 +65,7 @@ def parse(path):
             
         PALInstructionsSet.pointers.sort(key=operator.attrgetter('to'))
         
-        second_part_pointers = second_part_pointers + PALInstructionsSet.pointers_avec_offset
+        second_part_pointers = second_part_pointers + PALInstructionsSet.pointers_avec_offset + first_part_pointers
         second_part_pointers.sort(key=operator.attrgetter('to'))
         
         events.sort(key=operator.attrgetter('addr'))
