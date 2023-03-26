@@ -29,9 +29,10 @@ def init_argparse() -> argparse.ArgumentParser:
 class dialog:
     def __init__(self, TL, parameters):
         self.TL = TL
-        self.params = parameters
-        for i in range(0, len(self.params)):
-            self.params[i] = int(self.params[i])
+        self.params = []
+        for i in range(0, len(parameters)):
+            if (parameters[i]!= ""):
+                self.params.append(int(parameters[i]))
 
 def recompile(csv_file, dat_file):
         filename = Path(csv_file).stem
@@ -48,9 +49,9 @@ def recompile(csv_file, dat_file):
         with open(csv_file, newline='', encoding='utf-8') as csvfile:
             reader = csv.reader(csvfile, delimiter=',', quotechar='"')
             for row in reader:
-                
                 TL = dialog(row[1].replace("\n", "%N"), row[2:])
                 translations.append(TL)
+                index_row += 1
         
         
         idx_current_ptr = 0
