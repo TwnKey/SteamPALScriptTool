@@ -80,7 +80,7 @@ def recompile(csv_file, dat_file):
                 
             
                 
-            sz = count_text_bytes(text_addr, out)
+            sz = count_text_bytes(text_addr, out, b'%Q')
             new_text_bytes = codecs.encode(translations[idx_text].TL, "pal_custom_codec", "backslashreplace")
             
             globaloffset = globaloffset + len(new_text_bytes) - sz 
@@ -91,7 +91,7 @@ def recompile(csv_file, dat_file):
         #then we insert the new bytes
         for text_addr in PalDec.text_addrs:
             text_addr = text_addr + globaloffset
-            sz = count_text_bytes(text_addr, out) 
+            sz = count_text_bytes(text_addr, out, b'%Q') 
             new_text_bytes = codecs.encode(translations[idx_text].TL, "pal_custom_codec", "backslashreplace")
             
             out[text_addr:text_addr+sz] = []

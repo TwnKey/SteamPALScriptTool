@@ -75,10 +75,10 @@ def readtextbig5(
         return output.decode("big5")
 
 
-def count_text_bytes(addr, barray):
+def count_text_bytes(addr, barray, terminus):
     count = 0
     char2 = barray[addr:addr+2]
-    while char2 != bytearray(b'%Q'):
+    while char2 != bytearray(terminus):
         count += 1
         addr = addr + 1
         char2 = barray[addr:addr+2]
