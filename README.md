@@ -19,6 +19,19 @@ Once the dialogs have been translated, you can run the following command:
 `python.exe PALRecomp.py <csv file containing your translations> <original talk.dat file used for the csv generation>`
   
 and finally put the generated .dat file into the game directory (replace the name of the output .dat file accordingly)
+## How to change item, spells, monsters, etc names  
+Those data are stored inside the gXXXX.dat files, and are indexed inside the geindex.dat file. This means that the values inside geindex also need to be updated to reflect the changes of length for your texts made in the gXXXXX.dat file you are translating.
+
+So first extract the text contained inside the gXXXXX.dat file using this command:
+`python.exe GFileExtract.py <gXXXXX.dat>`
+
+Then translate the resulting csv file the same way you are translating the talk csv files (second column should hold the translation)  
+Finally you need to recompile into both geindex and the gXXXX file.  
+to do this, use the following command:   
+`python.exe GFileInsert.py <gXXXXX.csv> <gXXXXX.dat> geindex.dat`  
+where geindex.dat is taken from the game directory (Note that if you make multiple changes to different gXXXXX.dat files,   
+you should keep your updated geindex.dat and not use the original one to make sure all changes are added to geindex every time to recompile a different gXXXXX file)    
+![image](https://user-images.githubusercontent.com/69110695/230716085-9fe11977-cd6e-4d99-a015-2f4e790c6ee9.png)
 
 # Demo
 https://www.youtube.com/watch?v=3_FYB_OnEYk
